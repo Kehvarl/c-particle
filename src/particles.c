@@ -2,7 +2,24 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define MAX_ROCKS 2;
+/******************************************************
+ * Particles.C
+ * Implementation of a simple Falling-Rocks simulation
+ * Expects input on STDIN
+ *   First line: 2 Space-separated INTS indicating
+ *   Width and Height of the plane
+ * 
+ *   <Height> Lines of <Width> chars displaying the
+ *   Initial world state
+ * 
+ *   State Chars are:
+ *     ' ' - No rock
+ *     '.' - 1 rock
+ *     ':' - 2 rocks
+ *     'T' - Table (fixed in space)
+ *****************************************************/
+
+#define MAX_ROCKS 2
 
 struct simulation {
     int width;
@@ -34,7 +51,6 @@ int main(void)
     } else {
         width = strtol(strtok(line, search), &ptr, 10);
         height = strtol(strtok(NULL, search), &ptr, 10);
-        printf("%d  %d\n", width, height);
     }
 
     /* Initialize simulation cells*/
@@ -51,18 +67,20 @@ int main(void)
        * ".":  1
        * ":":  2
     */
-
-   for(int r = 0; r < sim.height; l++){
+   for(int row = 0; row < sim.height; row++){
        getline(&line, &size, stdin);
-       for(int c = 0; c < sim.width; c++){
-           if(strcmp(line[c], " ") == 0){
-               sim.world[r*c] = 0;
-           }else if(strcmp(line[c], ".") == 0){
-               sim.world[r*c] = 1;
-           }else if(strcmp(line[c], ":") == 0){
-               sim.world[r*c] = 2;
-           }else if(strcmp(line[c], "T") == 0){
-               sim.world[r*c] = -1;
+       for(int col = 0; col < sim.width; col++){
+           if(line[col] == ' '){
+               sim.world[row*sim.width+col] = 0;
+           }else if(line[col] == '.'){
+               sim.world[row*sim.width+col] = 1;
+           }else if(line[col] == ':'){
+               sim.world[row*sim.width+col] = 2;
+           }else if(line[col] == 'T'){
+               sim.world[row*sim.width+col] = -1;
+           }else{
+               printf("%c doesn't match any allowed character for %dx%d\n", line[col], row, col);
+               sim.world[row*sim.width+col] = 0;
            }
        }
    }
@@ -73,6 +91,7 @@ int main(void)
        Otherwise repeat */
     do {
         tick_results = tick(&sim);
+        print_world(&sim);
     } while(tick_results > 0);
 
     print_world(&sim);
@@ -85,39 +104,56 @@ int main(void)
 
 int tick(struct simulation *sim)
 {
-    char *temp = malloc(sizeof(int) * (sim->width * sim->height + 1));
+    int *temp = malloc(sizeof(sim->world)+1);
+    memcpy(temp, sim->world, sizeof(sim->world)+1);
 
-    for(int row=0; row < sim->height; row++){
+    int current=0, target=0, fall=0;
+
+    for(int row=0; row < sim->height-1; row++){
         for(int col=0; col < sim->width; col++){
             /* Current cell: sim->world[r*c]
                Target cell:  sim->world[r*c+sim->width]
                If Current Cell is 0 or -1 or Target Cell is -1: skip
                else: Move rocks from Current to Target 
                      until Target is at MAX or Current is at 0
-               */
+            */
+            current = sim->world[row*sim->width+col];
+            target = temp[row*sim->width+col+sim->width];
+            if(current > 0){
+                if((target > -1) && (target <= MAX_ROCKS)){
+                    fall = max(current, current - (MAX_ROCKS - target));
+                    current = current - fall;
+                    target = target + fall;
+
+                    temp[row*sim->width+col] = current;
+                    temp[row*sim->width+col+sim->width] = current;
+                }
+            }
         }
     }
 
+    memcpy(sim->world, temp,sizeof(sim->world)+1);
     free(temp);
     return 0;
 }
 
 int print_world(struct simulation *sim)
 {
+    printf("---------\n");
     for(int row=0; row < sim->height; row++){
         for(int col=0; col < sim->width; col++){
-            if(sim->world[row*col] == -1){
+            if(sim->world[row*sim->width+col] == -1){
                 printf("T");
-            } else if(sim->world[row*col] == 0){
+            } else if(sim->world[row*sim->width+col] == 0){
                 printf(" ");
-            } else if(sim->world[row*col] == 1){
+            } else if(sim->world[row*sim->width+col] == 1){
                 printf(".");
-            } else if(sim->world[row*col] == 2){
+            } else if(sim->world[row*sim->width+col] == 2){
                 printf(":");
             }
-
         }
         printf("\n");
     }
+    printf("\n\n");
     return 0;
 }
