@@ -21,6 +21,8 @@
 
 #define MAX_ROCKS 2
 
+#define MIN(a,b) (((a)<(b))?(a):(b))
+
 struct simulation {
     int width;
     int height;
@@ -121,7 +123,7 @@ int tick(struct simulation *sim)
             target = temp[row*sim->width+col+sim->width];
             if(current > 0){
                 if((target > -1) && (target <= MAX_ROCKS)){
-                    fall = max(current, current - (MAX_ROCKS - target));
+                    fall = MIN(current, current - (MAX_ROCKS - target));
                     current = current - fall;
                     target = target + fall;
 
