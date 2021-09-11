@@ -6,6 +6,8 @@ EXE := $(BIN_DIR)/particles
 SRC := $(wildcard $(SRC_DIR)/*.c)
 OBJ := $(SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 
+# Generate header dependencies automatically
+CPPFLAGS := -Iinclude -MMD -MP
 CFLAGS := -g -Wall
 
 # Out output file isn't named all, so we need a PHONY declaration
@@ -20,7 +22,7 @@ $(EXE): $(OBJ) | $(BIN_DIR)
 
 # Compile our src files into intermediate Objects  (Create OBJ dir if needed)
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 # Make sure out output directoies exist for OBJ and BIN
 $(BIN_DIR) $(OBJ_DIR):
