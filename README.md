@@ -4,7 +4,7 @@
   * `particles` to run in interactive mode
   * `particles < input_file` to provide a prepared test file
 
-## Compate to known output (linux/bash)
+## Compare to known output (linux/bash)
   * `diff -u input_file <(particles < output_file)`
 
 ## Testing
